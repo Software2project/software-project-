@@ -64,21 +64,18 @@ class PaperController extends Controller
     {
 
 
-        $src = $request->file('src');
-
-        $srcName = time().rand(1,100).'.'.$src->extension();
-
-        Storage::putFileAs('fileUploads', $request->file('src'), $srcName);
+        $fileSource = $request->file('src');
         
         $inputs = $request->all();
 
         $inputs['user_id'] = Auth::id();
         
-        $inputs['src'] = $srcName;
+        $inputs['src'] = $this->saveUploadedFile($fileSource);
 
         Paper::create($inputs);
 
         Session()->flash('success' , 'تم إنشاء بحث بنجاح!');
+
         return redirect()->back();
     }
 
@@ -124,22 +121,19 @@ class PaperController extends Controller
 
         $paper = Paper::findOrFail($id);
 
-        $oldsrc = $paper->src;
+        $oldFileSource = $paper->src;
 
-        $src = $request->file('src');
+        $fileSource = $request->file('src');
 
         if($request->file('src')) {
-            $srcName = time().rand(1,100).'.'.$src->extension();
-
-            Storage::putFileAs('fileUploads', $request->file('src'), $srcName);
-            
+           
             $inputs = $request->all();
-            $inputs['src'] = $srcName;
+            $inputs['src'] = $this->saveUploadedFile($fileSource);
 
         } else {
             
             $inputs = $request->all();
-            $inputs['src'] = $oldsrc;
+            $inputs['src'] = $oldFileSource;
         }
 
 
@@ -160,5 +154,15 @@ class PaperController extends Controller
         Paper::destroy(array('id', $id));
 
         return response()->json(['status'=>'تم حذف البحث بنجاح']);
+    }
+
+    public function saveUploadedFile($fileSource) {
+
+        $sourceName = time().rand(1,100).'.'.$fileSource->extension();
+
+        Storage::putFileAs('fileUploads', $fileSource, $sourceName);
+        
+        return $sourceName;
+        
     }
 }
